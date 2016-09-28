@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 
 /**
  * Created by markus on 28.09.16.
@@ -22,30 +23,56 @@ public class GameScreen extends ScreenAdapter{
     private float timer = MOVE_TIME;
     private SpriteBatch batch;
     private Texture snakeHead;
+    private Texture apple;
     private int snakeX = 0, snakeY = 0;
     private int snakeDirection = UP;
+    private boolean appleAvailable = false;
+    private int appleX, appleY;
 
     @Override
     public void show() {
         batch = new SpriteBatch();
         snakeHead = new Texture(Gdx.files.internal("snakehead.png"));
+        apple = new Texture(Gdx.files.internal("apple.png"));
 
     }
     @Override
     public void render(float delta) {
         queryInput();
 
-        Gdx.gl.glClearColor(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, Color.BLACK.a);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         timer -= delta;
         if (timer<= 0) {
             timer = MOVE_TIME;
             moveSnake();
             checkForOutOfBounds();
         }
+        checkAppleCollision();
+        checkAndPlaceApple();
+        clearScreen();
+        draw();
+
+
+    }
+
+    private void clearScreen() {
+        Gdx.gl.glClearColor(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, Color.BLACK.a);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    }
+
+    private void draw() {
         batch.begin();
         batch.draw(snakeHead, snakeX, snakeY);
+        if (appleAvailable) {
+            batch.draw(apple, appleX, appleY);
+        }
         batch.end();
+    }
+
+    private void checkAppleCollision() {
+        if (appleAvailable && appleX == snakeX && appleY == snakeY) {
+            appleAvailable = false;
+        }
     }
 
     private void checkForOutOfBounds() {
@@ -93,6 +120,19 @@ public class GameScreen extends ScreenAdapter{
         if (rPressed) snakeDirection = RIGHT;
         if (uPressed) snakeDirection = UP;
         if (dPressed) snakeDirection = DOWN;
+    }
+
+    private void checkAndPlaceApple() {
+        if (!appleAvailable) {
+            do {
+                appleX = MathUtils.random(Gdx.graphics.getWidth()
+                        / SNAKE_MOVEMENT - 1) * SNAKE_MOVEMENT;
+                appleY = MathUtils.random(Gdx.graphics.getHeight()
+                        / SNAKE_MOVEMENT - 1) * SNAKE_MOVEMENT;
+
+                appleAvailable = true;
+            } while (appleX == snakeX && appleY == snakeY);
+        }
     }
 
 }
